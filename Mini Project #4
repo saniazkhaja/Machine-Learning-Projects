@@ -1,0 +1,123 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.mixture import GaussianMixture
+
+def initialize_clusters(points, k):
+    # Randomly initialize centroids
+    centroids = points[np.random.choice(points.shape[0], k, replace=False)]
+    return centroids
+def assign_clusters(points, centroids):
+    # Calculate distances between each point and centroids
+    distances = np.linalg.norm(points[:, np.newaxis] - centroids, axis=2)
+    # Assign points to the nearest centroid
+    clusters = np.argmin(distances, axis=1)
+    return clusters
+def update_centroids(points, clusters, k):
+    # Update centroids based on the mean of points in each cluster
+    centroids = np.array([points[clusters == i].mean(axis=0) for i in range(k)])
+    return centroids
+def kmeans(X, k=2, max_iter=5):
+    # Initialize centroids
+    centroids = initialize_clusters(X, k)
+    for i in range(max_iter):
+        # Assign points to the nearest centroids
+        clusters = assign_clusters(X, centroids)
+        # Update centroids
+        centroids = update_centroids(X, clusters, k)
+        yield clusters, centroids
+def P1():
+    print()
+    # Generate training data
+    np.random.seed(0)
+    X1 = np.random.multivariate_normal([2,1], np.diag([0.4, 0.04]), 100)
+    X2 = np.random.multivariate_normal([1,2], np.diag([0.4, 0.04]), 100)
+    X = np.concatenate((X1,X2), axis=0)
+    # Perform K-means clustering
+    k = 2
+    max_iter = 5
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    for i, (clusters, centroids) in enumerate(kmeans(X, k, max_iter), 1):
+        # Plot current iteration
+        ax = axes[(i-1)//3, (i-1)%3]
+        ax.scatter(X[:,0], X[:,1], c=clusters, cmap='viridis', alpha=0.5)  # purple to yellow
+        ax.scatter(centroids[:,0], centroids[:,1], c=['cyan', 'red'], marker='o')
+        ax.set_title(f"Iteration {i}")
+        # Calculate and print objective function value
+        distances = np.linalg.norm(X - centroids[clusters], axis=1)
+        objective = np.sum(distances**2)
+        print(f"Iteration {i}: Objective function value = {objective}")
+    final_clusters = None
+    final_centroids = None
+    for clusters, centroids in kmeans(X, k, max_iter):
+        final_clusters = clusters
+        final_centroids = centroids
+    # Calculate the value of the K-means objective function
+    distances = np.linalg.norm(X - final_centroids[final_clusters], axis=1)
+    objective = np.sum(distances**2)
+    print(f"Final Objective function value = {objective}")
+    plt.tight_layout()
+    plt.show()
+    print()
+
+
+
+def visualize_gmm(X, clusters, means):
+    plt.scatter(X[:, 0], X[:, 1], c=clusters, cmap='viridis', alpha=0.5)
+    plt.scatter(means[:, 0], means[:, 1], c=['cyan', 'red'], marker='o', s=200, edgecolor='black')
+    plt.title("Gaussian Mixture Model Clustering")
+    plt.xlabel("Feature 1")
+    plt.ylabel("Feature 2")
+    plt.show()
+def print_gmm_parameters(gm):
+    print("Means of each mixture component:")
+    print(gm.means_)
+    print("\nCovariances of each mixture component:")
+    print(gm.covariances_)
+    print("\nWeights of each mixture component:")
+    print(gm.weights_)
+    print("\nPrecisions of each mixture component:")
+    print(gm.precisions_)
+    print("\nPrecisions Cholesky of each mixture component:")
+    print(gm.precisions_cholesky_)
+def calculate_responsibility(X, means, covariances, weights):
+    n_components = means.shape[0]
+    responsibilities = np.zeros((X.shape[0], n_components))
+    for i in range(n_components):
+        diff = X - means[i]
+        inv_cov = np.linalg.inv(covariances[i])
+        exponent = np.sum(-0.5 * np.dot(diff, np.dot(inv_cov, diff.T)), axis=1)
+        responsibilities[:, i] = weights[i] * np.exp(exponent) / np.sqrt(np.linalg.det(covariances[i]))
+    return responsibilities / np.sum(responsibilities, axis=1, keepdims=True)
+def assign_cluster(responsibilities):
+    return np.argmax(responsibilities, axis=1)
+def P2():
+    print()
+    # Generate data
+    np.random.seed(0)
+    X1 = np.random.multivariate_normal([2, 1], np.diag([0.4, 0.04]), 100)
+    X2 = np.random.multivariate_normal([1, 2], np.diag([0.4, 0.04]), 100)
+    X = np.concatenate((X1, X2), axis=0)
+    k = 2
+    # Step 2: Fit GMM and visualize
+    gm = GaussianMixture(n_components=k, random_state=0).fit(X)
+    clusters = gm.predict(X)
+    visualize_gmm(X, clusters, gm.means_)
+    # Step 3: Print learned parameters
+    print_gmm_parameters(gm)
+    # Step 4: Calculate responsibility values for a new point
+    new_point = np.array([[1.5, 1.5]])
+    responsibilities = calculate_responsibility(new_point, gm.means_, gm.covariances_, gm.weights_)
+    print("\nResponsibility values for the new point (1.5, 1.5):")
+    print(responsibilities)
+    # Step 5: Assign cluster based on responsibility values
+    assigned_cluster = assign_cluster(responsibilities)
+    print("\nAssigned cluster for the new point (1.5, 1.5):", assigned_cluster)
+    # Predicted cluster assignment using GMM's predict function
+    predicted_cluster = gm.predict(new_point)
+    print("Predicted cluster assignment using GMM's predict function:", predicted_cluster)
+    print()
+
+# running homework problems
+P1()
+P2()
