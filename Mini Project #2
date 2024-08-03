@@ -1,0 +1,273 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# P1. Please follow the steps below to implement a linear regression model to learn a 3rd-order
+# polynomial function. (20 points)
+# 1. Generate 20 pairs of (x, y) values following the steps in P4 of MP #1. They are your training data.
+# 2. Learn the parameters of a 3rd-order polynomial function on the training data via linear
+# regression. You can use the linear regression code in our code tutorial as a template (available in
+# Blackboard) or build your own code from scratch. Print the learned parameters. Also type or
+# write down the formulation of the learned 3rd-order polynomial function in your submitted PDF
+# file. Hint: think about how to construct the matrix corresponding to the input.
+# 3. Use the learned model to make predictions on input values 𝑥1 = 0, 𝑥2 = 0.25, 𝑥3 = 0.5, 𝑥4 =
+# 0.75, 𝑥5 = 1, respectively. Print the predicted output values.
+# 4. Use four different colors to respectively draw in a single figure (1) the noiseless sine function1
+# used for data generation, (2) training data in Step 1, (3) (x, y) values in Step 3, and (4) the
+# learned 3rd-order polynomial function.
+# 1 This tutorial (https://www.codesansar.com/python-programming-examples/sine-wave-using-numpy-andmatplotlib.htm) 
+# illustrates how to draw a sine function via numpy and matplotlib. Polynomial functions can be
+# drawn similarly.
+def P1():
+    # Step 1: Generate 20 pairs of (x, y) values
+    np.random.seed(42)  # Setting seed
+    x_train = np.random.rand(20)
+    y_train = np.sin(2 * np.pi * x_train) + 0.1 * np.random.randn(20)
+    # Step 2: Learn the parameters of a 3rd-order polynomial function via linear regression
+    X_train = np.column_stack([np.ones_like(x_train), x_train, x_train**2, x_train**3])
+    theta = np.linalg.inv(X_train.T @ X_train) @ X_train.T @ y_train
+    print("Learned Parameters:")
+    print("theta0:", theta[0])
+    print("theta1:", theta[1])
+    print("theta2:", theta[2])
+    print("theta3:", theta[3])
+    # Step 3: Use the learned model to make predictions
+    x_predictions = np.array([0, 0.25, 0.5, 0.75, 1])
+    X_predictions = np.column_stack([np.ones_like(x_predictions), x_predictions, x_predictions**2, x_predictions**3])
+    y_predictions = X_predictions @ theta
+    print("\nPredicted Output Values:")
+    for x, y_pred in zip(x_predictions, y_predictions):
+        print(f"At x = {x}, predicted y = {y_pred}")
+    # Step 4: Plotting
+    x_sine = np.linspace(0, 1, 100)
+    y_sine = np.sin(2 * np.pi * x_sine)
+    plt.plot(x_sine, y_sine, label="Noiseless Sine Function", color="blue")
+    plt.scatter(x_train, y_train, label="Training Data", color="green")
+    plt.scatter(x_predictions, y_predictions, label="Predicted Values", color="red")
+    
+    x_poly = np.linspace(0, 1, 100)
+    y_poly = theta[0] + theta[1] * x_poly + theta[2] * x_poly**2 + theta[3] * x_poly**3
+    plt.plot(x_poly, y_poly, label="Learned 3rd-order Polynomial", color="purple")
+    plt.legend()
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Linear Regression with 3rd-order Polynomial")
+    plt.show()
+    print()
+
+# P2. Perform 5-fold cross-validation to calculate the prediction error of a 3rd-order polynomial function
+# on each validation fold. Use the root mean square error (Page 11 of L3_Regression.pdf) as the 
+# performance metric. For each validation fold, print the learned parameters and prediction error. Also
+# print the average prediction error on all validation folds. (15 points)
+# Note a prediction error is calculated for a validation fold, and an average prediction error is calculated
+# for a cross validation, averaging the prediction errors on all validation folds
+def calculate_rmse(predictions, targets):
+    return np.sqrt(((predictions - targets) ** 2).mean())
+def P2():
+    # Step 1: Generate 100 pairs of (x, y) values
+    np.random.seed(42)  # Setting seed
+    x = np.random.rand(20)
+    y = np.sin(2 * np.pi * x) + 0.1 * np.random.randn(20)
+    # Step 2: Perform 5-fold cross-validation
+    num_folds = 5
+    fold_size = len(x) // num_folds
+    total_rmse = 0  # To calculate the average RMSE
+    for fold in range(num_folds):
+        # Split data into training and validation sets
+        start_idx = fold * fold_size
+        end_idx = (fold + 1) * fold_size
+        x_valid = x[start_idx:end_idx]
+        y_valid = y[start_idx:end_idx]
+        x_train = np.concatenate([x[:start_idx], x[end_idx:]])
+        y_train = np.concatenate([y[:start_idx], y[end_idx:]])
+        # Learn the parameters of a 3rd-order polynomial function via linear regression
+        X_train = np.column_stack([np.ones_like(x_train), x_train, x_train**2, x_train**3])
+        theta = np.linalg.inv(X_train.T @ X_train) @ X_train.T @ y_train
+        # Use the learned model to make predictions on the validation set
+        X_valid = np.column_stack([np.ones_like(x_valid), x_valid, x_valid**2, x_valid**3])
+        y_pred = X_valid @ theta
+        # Calculate and print the learned parameters and prediction error for each fold
+        print(f"\nFold {fold + 1}:")
+        print("Learned Parameters:")
+        print("theta0:", theta[0])
+        print("theta1:", theta[1])
+        print("theta2:", theta[2])
+        print("theta3:", theta[3])
+        rmse = calculate_rmse(y_pred, y_valid)
+        print("Prediction Error (RMSE):", rmse)
+        total_rmse += rmse
+    # Calculate and print the average prediction error on all validation folds
+    avg_rmse = total_rmse / num_folds
+    print("\nAverage Prediction Error (RMSE) on All Folds:", avg_rmse)
+    print()
+
+# P3. Follow the steps below to find the optimal hyperparameter. (15 points)
+# 1. Set the order of the polynomial function to 1, 3, 5, 7, 9, respectively, and for each order,
+# perform 5-fold cross-validation as in P2 to calculate the average prediction error. Print (1) the
+# average cross-validation error of each order, and (2) the optimal order.
+# 2. For each order, draw the polynomial function learned in the first iteration of the crossvalidation. 
+# Also draw all training (x, y) values in this figure to see how well different polynomial
+# functions fit the data.
+def polynomial_regression(x_train, y_train, order):
+    X_train = np.column_stack([x_train**i for i in range(order + 1)])
+    theta = np.linalg.inv(X_train.T @ X_train) @ X_train.T @ y_train
+    return theta
+def P3():
+    # Generate 100 pairs of (x, y) values
+    np.random.seed(42)  # Setting seed
+    x = np.random.rand(20)
+    y = np.sin(2 * np.pi * x) + 0.1 * np.random.randn(20)
+    # Step 1: Set the order of the polynomial function and perform 5-fold cross-validation
+    orders = [1, 3, 5, 7, 9]
+    num_folds = 5
+    fold_size = len(x) // num_folds
+    average_errors = []
+    plt.scatter(x, y, label="Training Data", color="green")
+    for order in orders:
+        total_rmse = 0  # To calculate the average RMSE
+        for fold in range(num_folds):
+            # Split data into training and validation sets
+            start_idx = fold * fold_size
+            end_idx = (fold + 1) * fold_size
+            x_valid = x[start_idx:end_idx]
+            y_valid = y[start_idx:end_idx]
+            x_train = np.concatenate([x[:start_idx], x[end_idx:]])
+            y_train = np.concatenate([y[:start_idx], y[end_idx:]])
+            # Learn the parameters of the polynomial function via linear regression
+            theta = polynomial_regression(x_train, y_train, order)
+            # Use the learned model to make predictions on the validation set
+            X_valid = np.column_stack([x_valid**i for i in range(order + 1)])
+            y_pred = X_valid @ theta
+            # Calculate and accumulate the prediction error (RMSE) for each fold
+            rmse = calculate_rmse(y_pred, y_valid)
+            total_rmse += rmse
+            # Plot the polynomial function learned in the first iteration of cross-validation
+            if fold == 0:
+                x_poly = np.linspace(0, 1, 100)
+                X_poly = np.column_stack([x_poly**i for i in range(order + 1)])
+                y_poly = X_poly @ theta
+                plt.plot(x_poly, y_poly, label=f"Order {order}")
+        # Calculate and print the average prediction error on all validation folds for the current order
+        avg_rmse = total_rmse / num_folds
+        average_errors.append(avg_rmse)
+        print(f"\nAverage Prediction Error (RMSE) for Order {order}: {avg_rmse}")
+    # Find and print the optimal order with the minimum average prediction error
+    optimal_order = orders[np.argmin(average_errors)]
+    print(f"\nOptimal Order: {optimal_order}")
+    # Add labels and legend
+    plt.legend()
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Polynomial Regression with Different Orders")
+    plt.show()
+    print()
+
+# O1. Use ridge regression (Page 14 of L3_Regression.pdf) with 𝜆 = 0.001 to fit a 9th order polynomial
+# function to the training data in P1. Draw in a single figure (1) the training data, (2) the polynomial
+# function learned via ridge regression, and (3) the polynomial function learned via linear regression as in
+# P3. (2.5 points)
+def ridge_regression(x_train, y_train, order, lambda_value):
+    X_train = np.column_stack([x_train**i for i in range(order + 1)])
+    identity_matrix = np.identity(order + 1)
+    theta_ridge = np.linalg.inv(X_train.T @ X_train + lambda_value * identity_matrix) @ X_train.T @ y_train
+    return theta_ridge
+def O1():
+    # Training data from P1
+    np.random.seed(42)  # Setting seed
+    x_train = np.random.rand(20)
+    y_train = np.sin(2 * np.pi * x_train) + 0.1 * np.random.randn(20)
+    # Ridge regression with lambda = 0.001 and order = 9
+    order = 9
+    lambda_value = 0.001
+    theta_ridge = ridge_regression(x_train, y_train, order, lambda_value)
+    # Linear regression with order = 9 (as in P3)
+    X_train_linear = np.column_stack([np.ones_like(x_train)] + [x_train**i for i in range(1, order + 1)])
+    theta_linear = np.linalg.inv(X_train_linear.T @ X_train_linear) @ X_train_linear.T @ y_train
+    # Plot training data
+    plt.scatter(x_train, y_train, label="Training Data", color="green")
+    # Plot polynomial function learned via ridge regression
+    x_ridge = np.linspace(0, 1, 100)
+    X_ridge = np.column_stack([x_ridge**i for i in range(order + 1)])
+    y_ridge = X_ridge @ theta_ridge
+    plt.plot(x_ridge, y_ridge, label="Ridge Regression (λ=0.001)", color="blue")
+    # Plot polynomial function learned via linear regression (P3)
+    X_linear = np.column_stack([np.ones_like(x_ridge)] + [x_ridge**i for i in range(1, order + 1)])
+    y_linear = X_linear @ theta_linear
+    plt.plot(x_ridge, y_linear, label="Linear Regression (P3)", color="red")
+    # Add labels and legend
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.legend()
+    plt.title("Ridge Regression vs Linear Regression (P3)")
+    # Show the plot
+    plt.show()
+    print()
+
+# O2. Perform 5-fold cross validation to find the best hyperparameter 𝜆 of a 9th order polynomial
+# function. At least 5 different values of 𝜆 should be chosen and tested. Print (1) the average prediction
+# error of each 𝜆 value and (2) the optimal 𝜆 value. Draw in a single figure (1) the training data and (2) the
+# 9th order polynomial functions corresponding to different 𝜆 values learned in the first iteration of the
+# cross-validation. (2.5 points)
+def O2():
+    # Training data from P1
+    np.random.seed(42)  # Setting seed
+    x = np.random.rand(20)
+    y = np.sin(2 * np.pi * x) + 0.1 * np.random.randn(20)
+    # Set the orders and 𝜆 values
+    order = 9
+    lambda_values = [0.001, 0.01, 0.1, 1, 10]  # At least 5 different values of λ
+    k = 5
+    # Calculate the size of each fold
+    fold_size = len(x) // k
+    errors_per_lambda = []
+    # Plot the training data
+    plt.scatter(x, y, label="Training Data", color="green")
+    # Loop over different λ values
+    for lambda_value in lambda_values:
+        total_rmse = 0
+        # Perform k-fold cross-validation
+        for fold in range(k):
+            start_idx = fold * fold_size
+            end_idx = (fold + 1) * fold_size
+            x_valid = x[start_idx:end_idx]
+            y_valid = y[start_idx:end_idx]
+            x_train = np.concatenate([x[:start_idx], x[end_idx:]])
+            y_train = np.concatenate([y[:start_idx], y[end_idx:]])
+            # Learn the parameters of the polynomial function via ridge regression
+            theta_ridge = ridge_regression(x_train, y_train, order, lambda_value)
+            # Use the learned model to make predictions on the validation set
+            X_valid = np.column_stack([x_valid**i for i in range(order + 1)])
+            y_pred = X_valid @ theta_ridge
+            # Calculate and accumulate the prediction error (RMSE) for each fold
+            rmse = calculate_rmse(y_pred, y_valid)
+            total_rmse += rmse
+            # Plot the 9th order polynomial function learned in the first iteration of cross-validation
+            if fold == 0:
+                x_poly = np.linspace(0, 1, 100)
+                X_poly = np.column_stack([x_poly**i for i in range(order + 1)])
+                y_poly = X_poly @ theta_ridge
+                plt.plot(x_poly, y_poly, label=f"λ={lambda_value}")
+        # Calculate and print the average prediction error on all validation folds for the current λ value
+        avg_rmse = total_rmse / k
+        errors_per_lambda.append(avg_rmse)
+        print(f"Average Prediction Error (RMSE) for λ={lambda_value}: {avg_rmse}")
+    # Add labels and legend
+    plt.legend()
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("9th Order Polynomial Ridge Regression with Different λ Values")
+    plt.show()
+    # Find and print the optimal λ value with the minimum average prediction error
+    optimal_lambda = lambda_values[np.argmin(errors_per_lambda)]
+    print(f"\nOptimal λ: {optimal_lambda}")
+    return optimal_lambda
+    
+
+# running homework problems
+P1()
+P2()
+P3()
+    
+# running optional homework problems
+O1()
+O2()
