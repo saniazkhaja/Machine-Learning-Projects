@@ -1,0 +1,176 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+def generate_random_points(size=10, low=0, high=1):
+    data = (high - low) * np.random.random_sample((size, 2)) + low
+    return data
+# Define KNN classifier
+def knn_predict(X_train, y_train, x_test, k=3):
+    # Calculate the Euclidean distances between the test point and all training points
+    distances = np.sum((X_train - x_test) ** 2, axis=1)
+    # Find the indices of the k nearest neighbors
+    nearest_indices = np.argsort(distances)[:k]
+    # Retrieve the k nearest neighbors and their corresponding classes
+    nearest_neighbors = X_train[nearest_indices]
+    nearest_classes = y_train[nearest_indices]
+    return nearest_neighbors, nearest_classes
+
+def P1():
+    N = 20 # number of samples in each class
+    X1 = generate_random_points(N, 0, 1)
+    y1 = np.ones(N)
+    X2 = generate_random_points(N, 1, 2)
+    y2 = np.zeros(N)
+    X = np.concatenate((X1, X2), axis=0)
+    y = np.concatenate((y1, y2), axis=0)
+    indices = np.arange(2*N)
+    np.random.shuffle(indices)
+    X = X[indices, :]
+    y = y[indices]
+    x_test = np.array([[1.0, 1.0]])
+    k = 3
+    nearest_neighbors, nearest_classes = knn_predict(X, y, x_test, k)
+    print("Predicted class is:", int(np.round(np.mean(nearest_classes))))
+    print("K Nearest Neighbors:")
+    for i in range(k):
+        print(f"Neighbor {i+1}: {nearest_neighbors[i]} - Class: {int(nearest_classes[i])}")
+    # Plotting
+    plt.figure(figsize=(8, 6))
+    # Plot training data
+    plt.scatter(X1[:, 0], X1[:, 1], c='red', label='Class 1')
+    plt.scatter(X2[:, 0], X2[:, 1], c='blue', label='Class 0')
+    # Plot testing sample
+    plt.scatter(x_test[:, 0], x_test[:, 1], c='green', marker='^', label='Testing Sample')
+    # Highlight K nearest neighbors
+    for i in range(k):
+        plt.scatter(nearest_neighbors[i, 0], nearest_neighbors[i, 1], facecolors='none', edgecolors='black', s=200)
+    plt.xlabel('X1')
+    plt.ylabel('X2')
+    plt.title('K-Nearest Neighbors Classification')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    print()
+
+def knn_predictP2(X_train, y_train, x_test, k=3):
+    # Calculate the Euclidean distances between the test point and all training points
+    distances = np.sum((X_train - x_test) ** 2, axis=1)
+    # Find the indices of the k nearest neighbors
+    nearest_indices = np.argsort(distances)[:k]
+    # Retrieve the classes of the k nearest neighbors
+    nearest_classes = y_train[nearest_indices]
+    # Count the occurrences of each class among the nearest neighbors
+    unique_classes, class_counts = np.unique(nearest_classes, return_counts=True)
+    # Predict the class of the test point based on the majority class among the nearest neighbors
+    predicted_class = unique_classes[np.argmax(class_counts)]
+    return predicted_class
+def cross_validation(X, y, k_values, num_folds=5):
+    # Determine the size of each fold
+    fold_size = len(X) // num_folds
+    # Initialize a list to store average accuracies for each k value
+    average_accuracies = []
+    # Iterate over each k value
+    for k in k_values:
+        # Initialize a list to store accuracies for each fold
+        accuracies = []
+        # Iterate over each fold
+        for fold in range(num_folds):
+            # Determine the start and end indices of the current fold
+            start_idx = fold * fold_size
+            end_idx = (fold + 1) * fold_size
+            # Extract validation data for the current fold
+            X_val = X[start_idx:end_idx]
+            y_val = y[start_idx:end_idx]
+            # Extract training data by excluding the current fold
+            X_train = np.concatenate([X[:start_idx], X[end_idx:]])
+            y_train = np.concatenate([y[:start_idx], y[end_idx:]])
+            # Calculate accuracies for the current fold and print it
+            fold_accuracies = [knn_predictP2(X_train, y_train, x_test, k) == true_label for x_test, true_label in zip(X_val, y_val)]
+            fold_accuracy = np.mean(fold_accuracies)
+            accuracies.append(fold_accuracy)
+            print(f"Accuracy for K={k}, Fold={fold+1}: {fold_accuracy}")
+        # Calculate the average accuracy for the current k value
+        average_accuracy = np.mean(accuracies)
+        average_accuracies.append(average_accuracy)
+        # Print average accuracy for the current k value
+        print(f"Average Accuracy for K={k}: {average_accuracy}")
+        print()
+    # Find and print the optimal k value that achieves the highest average accuracy
+    optimal_k = k_values[np.argmax(average_accuracies)]
+    print(f"\nOptimal K: {optimal_k} (achieves highest average accuracy)")
+def P2():
+    N = 20 # number of samples in each class
+    X1 = generate_random_points(N, 0, 1.5)
+    y1 = np.ones(N)
+    X2 = generate_random_points(N, 0.5, 2)
+    y2 = np.zeros(N)
+    X = np.concatenate((X1, X2), axis=0)
+    y = np.concatenate((y1, y2), axis=0)
+    indices = np.arange(2*N)
+    np.random.shuffle(indices)
+    X = X[indices, :]
+    y = y[indices]
+    # Define values of K to test
+    k_values = [1, 3, 5, 7, 9]
+    # Perform 5-fold cross-validation
+    cross_validation(X, y, k_values)
+    print()
+
+def P3():
+    # Step 1: Generate a linearly separable training set and a testing set
+    N = 20 # number of samples in each class
+    X1_train = generate_random_points(N, 0, 1)
+    X2_train = generate_random_points(N, 1, 2)
+    X_train = np.concatenate((X1_train, X2_train), axis=0)
+    y_train = np.concatenate((np.ones(N), np.zeros(N)), axis=0)
+    indices = np.arange(2*N)
+    np.random.shuffle(indices)
+    X_train = X_train[indices, :]
+    y_train = y_train[indices]
+    X_test = np.array([[0.5, 0.5], [1, 1], [1.5, 1.5]])
+    print("Testing set:")
+    print(X_test)
+    # Step 2: Train logistic regression model
+    logistic_model = LogisticRegression()
+    logistic_model.fit(X_train, y_train)
+    logistic_predictions = logistic_model.predict(X_test)
+    print("\nLogistic Regression Predictions:", logistic_predictions)
+    # Step 3: Train SVM model
+    svm_model = SVC(kernel='linear', C=1000)
+    svm_model.fit(X_train, y_train)
+    svm_predictions = svm_model.predict(X_test)
+    print("SVM Predictions:", svm_predictions)
+    # Step 4: Plotting
+    plt.figure(figsize=(10, 6))
+    # Plot training data
+    plt.scatter(X1_train[:, 0], X1_train[:, 1], color='red', label='Class 1')
+    plt.scatter(X2_train[:, 0], X2_train[:, 1], color='blue', label='Class 0')
+    # Plot decision boundaries
+    # Logistic Regression decision boundary
+    w = logistic_model.coef_[0]
+    a = -w[0] / w[1]
+    xx = np.linspace(0, 2, 100)
+    yy = a * xx - (logistic_model.intercept_[0]) / w[1]
+    plt.plot(xx, yy, 'k-', label='Logistic Regression Decision Boundary')
+    # SVM decision boundary
+    w = svm_model.coef_[0]
+    a = -w[0] / w[1]
+    yy = a * xx - (svm_model.intercept_[0]) / w[1]
+    plt.plot(xx, yy, 'g--', label='SVM Decision Boundary')
+    # Plot testing data
+    plt.scatter(X_test[:, 0], X_test[:, 1], color='green', label='Testing Data')
+    plt.legend()
+    plt.xlabel('X1')
+    plt.ylabel('X2')
+    plt.title('Logistic Regression vs SVM Decision Boundaries')
+    plt.grid(True)
+    plt.show()
+    print()
+
+
+# running homework problems
+P1()
+P2()
+P3()
