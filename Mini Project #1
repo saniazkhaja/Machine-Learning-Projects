@@ -1,0 +1,192 @@
+import numpy as np  
+import matplotlib.pyplot as plt  
+# P1. Given two matrices below, please use Numpy to calculate their matrix multiplication and elementwise multiplication. (10 points)
+# 𝐀 =  [1 2 3
+#       0 1 3
+#       1 0 8 ] 
+# 𝐁 = [ 7 9 2
+#       3 4 3
+#       6 1 3 ]
+def P1():
+    # Given matrices
+    A = np.array([[1, 2, 3],
+                [0, 1, 3],
+                [1, 0, 8]])
+    B = np.array([[7, 9, 2],
+                [3, 4, 3],
+                [6, 1, 3]])
+    print()
+    # Matrix multiplication
+    matrix_multiplication_result = np.dot(A, B)
+    print("Matrix Multiplication Result:")
+    print(matrix_multiplication_result)
+    print("\n")
+    # Elementwise multiplication
+    elementwise_multiplication_result = np.multiply(A, B)
+    print("Elementwise Multiplication Result:")
+    print(elementwise_multiplication_result)
+    print()
+
+# P2. Please use Numpy to calculate 𝐀^-1, A^T, (A^T)A
+def P2():
+    # Given matrix
+    A = np.array([[1, 2, 3],
+                [0, 1, 3],
+                [1, 0, 8]])
+    
+    print()
+    # Inverse of matrix A
+    A_inverse = np.linalg.inv(A)
+    print("Inverse of Matrix A:")
+    print(A_inverse)
+    print("\n")
+    # Transpose of matrix A
+    A_transpose = np.transpose(A)
+    print("Transpose of Matrix A:")
+    print(A_transpose)
+    print("\n")
+    # (Transpose of A) times A
+    A_transpose_times_A = np.dot(A_transpose, A)
+    print("(Transpose of A) times A:")
+    print(A_transpose_times_A)
+    print()
+
+# P3. Please use Numpy to calculate both the 𝐿1 Norm and 𝐿2 Norm of 𝐚 = [1, −1, 0], 𝐛 = [0, 1, 1], 𝐚 − 𝐛. (10 points)
+def P3():
+    # Given vectors
+    a = np.array([1, -1, 0])
+    b = np.array([0, 1, 1])
+    # L1 Norm Calculation
+    l1_norm_a = np.linalg.norm(a, ord=1)
+    l1_norm_b = np.linalg.norm(b, ord=1)
+    l1_norm_a_minus_b = np.linalg.norm(a - b, ord=1)
+    print()
+    print("L1 Norm of a:", l1_norm_a)
+    print("L1 Norm of b:", l1_norm_b)
+    print("L1 Norm of a - b:", l1_norm_a_minus_b)
+    print("\n")
+    # L2 Norm Calculation
+    l2_norm_a = np.linalg.norm(a, ord=2)
+    l2_norm_b = np.linalg.norm(b, ord=2)
+    l2_norm_a_minus_b = np.linalg.norm(a - b, ord=2)
+    print("L2 Norm of a:", l2_norm_a)
+    print("L2 Norm of b:", l2_norm_b)
+    print("L2 Norm of a - b:", l2_norm_a_minus_b)
+    print()
+
+# P4. Please follow the steps below to generate synthetic data that can be used for regression. (15 points)
+# 1. Use numpy.random.uniform1 to generate 20 random numbers following a uniform distribution in the range [0,1]. They are samples of a scalar input 𝑥.
+# 2. For each sample value of 𝑥, generate the ground truth output value 𝑦 = sin(2𝜋𝑥) + 𝑛, where 𝑛 is a random noise value from a Gaussian distribution2 with 0 mean and 0.3 standard deviation.
+# 3. Now you have 20 pairs of (𝑥, 𝑦). Use matplotlib.pyplot3 to draw these points. Do not connect points with lines.
+# 4. Your answer to this question is the figure.
+# 1 https://numpy.org/doc/stable/reference/random/generated/numpy.random.uniform.html
+# 2 https://numpy.org/doc/stable/reference/random/generated/numpy.random.normal.html
+# 3 https://matplotlib.org/stable/tutorials/introductory/pyplot.html
+# 4 https://numpy.org/doc/stable/reference/random/generated/numpy.random.multivariate_normal.html
+# 5 https://numpy.org/doc/stable/reference/generated/numpy.linalg.eig.html
+# 6 https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html
+def P4():
+    # Step 1: Generate 20 random numbers following a uniform distribution in the range [0,1]
+    x_samples = np.random.uniform(0, 1, 20)
+    # Step 2: Generate ground truth output values y = sin(2πx) + 𝑛
+    noise = np.random.normal(0, 0.3, 20)
+    y_ground_truth = np.sin(2 * np.pi * x_samples) + noise
+    # Step 3: Plot the points
+    plt.scatter(x_samples, y_ground_truth, label='Data Points', color='blue')
+    plt.title('Synthetic Data for Regression')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.show()
+
+# Please follow the steps below to generate synthetic data that can be used for classification and clustering. (15 points)
+# 1. Use numpy.random.multivariate_normal4 to generate 10 2D points from a multivariate Gaussian distribution whose mean is [1, 1] and covariance matrix is a 2-by-2 identity matrix. The label of each point is 0.
+# 2. Similarly, generate 10 2D points from a multivariate Gaussian distribution with mean [1, 2] and an identity covariance matrix. The label of each point is 1.
+# 3. Similarly, generate 10 2D points from a multivariate Gaussian distribution with mean [2, 1] and an identity covariance matrix. The label of each point is 2.
+# 4. Now you have 30 2D points belonging to 3 categories. Use matplotlib.pyplot to draw these points. You should choose 3 different colors for 3 categories and draw each point using the color corresponding to its category. Do not connect points with lines.
+# 5. Your answer to this question is the figure.
+def P5():
+    # Step 1: Generate 10 2D points from a multivariate Gaussian with mean [1, 1] and identity covariance
+    mean_1 = [1, 1]
+    covariance_1 = np.identity(2)
+    points_category_0 = np.random.multivariate_normal(mean_1, covariance_1, 10)
+    # Step 2: Generate 10 2D points from a multivariate Gaussian with mean [1, 2] and identity covariance
+    mean_2 = [1, 2]
+    covariance_2 = np.identity(2)
+    points_category_1 = np.random.multivariate_normal(mean_2, covariance_2, 10)
+    # Step 3: Generate 10 2D points from a multivariate Gaussian with mean [2, 1] and identity covariance
+    mean_3 = [2, 1]
+    covariance_3 = np.identity(2)
+    points_category_2 = np.random.multivariate_normal(mean_3, covariance_3, 10)
+    # Step 4: Plot the points with different colors for each category
+    plt.scatter(points_category_0[:, 0], points_category_0[:, 1], label='Category 0', color='red')
+    plt.scatter(points_category_1[:, 0], points_category_1[:, 1], label='Category 1', color='green')
+    plt.scatter(points_category_2[:, 0], points_category_2[:, 1], label='Category 2', color='blue')
+    # Step 5: Customize the plot
+    plt.title('Synthetic Data for Classification and Clustering')
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.legend()
+    plt.show()
+
+# O1. Use numpy.linalg.eig5 to perform eigendecomposition for matrix 𝑪. Print the matrix of eigen vectors
+# and the diagonal matrix of eigen values. Then, verify whether matrix 𝑪 can be reconstructed via the
+# matrix of eigen vectors and the diagonal matrix of eigen values. (2.5 points)
+# 𝐂 = [1 2 1
+#      2 1 0
+#      1 0 8]
+def O1():
+    # Given matrix
+    C = np.array([[1, 2, 1],
+                [2, 1, 0],
+                [1, 0, 8]])
+    # Eigendecomposition
+    eigenvalues, eigenvectors = np.linalg.eig(C)
+    # Print eigenvalues and eigenvectors
+    print()
+    print("Eigenvalues:")
+    print(np.diag(eigenvalues))
+    print("\n")
+    print("Eigenvectors:")
+    print(eigenvectors)
+    print("\n")
+    # Reconstructing matrix C
+    reconstructed_C = eigenvectors @ np.diag(eigenvalues) @ np.linalg.inv(eigenvectors)
+    # Verify reconstruction
+    print("Original Matrix C:")
+    print(C)
+    print("\n")
+    print("Reconstructed Matrix C:")
+    print(reconstructed_C)
+    print()
+
+# O2. Use numpy.linalg.svd6 to perform singular value decomposition for matrix 𝑪. Print the three obtained matrices. (2.5 points)
+def O2():
+    # Given matrix
+    C = np.array([[1, 2, 1],
+                [2, 1, 0],
+                [1, 0, 8]])
+    # Singular Value Decomposition
+    U, S, Vt = np.linalg.svd(C)
+    # Print the three obtained matrices
+    print()
+    print("Matrix U:")
+    print(U)
+    print("\n")
+    print("Diagonal Matrix S (Singular Values):")
+    print(np.diag(S))
+    print("\n")
+    print("Matrix Vt (Transpose of V):")
+    print(Vt)
+    print()
+
+# running homework problems
+P1()
+P2()
+P3()
+P4()
+P5()
+# running optional homework problems
+O1()
+O2()
+
